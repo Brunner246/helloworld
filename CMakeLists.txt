@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 project(HelloWorld)
 
-add_executable(HelloWorld 
+add_library(HelloWorld SHARED 
 main.cpp
 MyModule.ixx
 )
