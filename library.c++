@@ -1,5 +1,10 @@
 #include <iostream>
 #include "CwAPI3D.h"
+#include <memory>
+#include <functional>
+#include <concepts>
+#include <ranges>
+#include <algorithm>
 
 import MyModule;
 
@@ -33,6 +38,50 @@ T divide(T a, T b)
   return a / b;
 }
 
+namespace Strategy
+{
+  template<typename T>
+  concept Invokable = requires(T a) {
+    std::is_invocable_v<T>;
+  };
+  template<Invokable T>
+  class Strategy
+  {
+    public:
+     explicit Strategy(T&& aStrategy)
+       : mStrategy(std::forward<T>(aStrategy))
+     {
+     }
+      void execute()
+      {
+        mStrategy();
+      }
+    private:
+      T mStrategy;
+  };
+}
+
+
+auto compare_with_tolerance = [=](auto x, auto y) {
+        // return x < y && 
+        return std::abs(x - y) < 1e-4;
+    };
+
+template<typename T>
+struct Proxy{T const& aValue;};
+
+template<typename Range, typename T>
+auto operator | (Range const& aRange, Proxy<T> const& aProxy)
+{
+  return aRange | std::views::filter([&](auto const& aElement) { return compare_with_tolerance(aElement, aProxy.aValue); });
+}
+
+template<typename T>
+auto filterTolerance(T const& aTolerance)
+{
+  return Proxy<T>{aTolerance};
+}
+
 CWAPI3D_PLUGIN bool plugin_x64_init(CwAPI3D::ControllerFactory* aFactory);
 
 
@@ -51,6 +100,20 @@ bool plugin_x64_init(CwAPI3D::ControllerFactory* aFactory)
   std::cout << lPerson.getName() << std::endl;
 
   std::cout << divide<int>(10, 2) << std::endl;
+
+  Strategy::Strategy lStrategy([] { std::cout << "This is a Lambda =)\n"; });
+  lStrategy.execute();
+    std::function<void()> lambdaFunction = [] { std::cout << "This is a Lambda =)\n"; };
+  auto lStrategy2 = std::make_unique<Strategy::Strategy<decltype(lambdaFunction)>>(std::move(lambdaFunction));
+  lStrategy2->execute();
+
+  std::vector lVector{ 1.2, 2.3, 3.4, 4.5, 5.6 };
+  auto lFilteredVector = lVector | filterTolerance(1.2);
+  if (!lFilteredVector.empty())
+  {
+    std::ranges::for_each(lFilteredVector, [&aFactory](auto const& aElement) { aFactory->getUtilityController()->printToConsole(std::to_wstring(aElement).data()); });
+  }
+
 
   return EXIT_SUCCESS;
 }
