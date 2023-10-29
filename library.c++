@@ -1,4 +1,6 @@
 #include <iostream>
+#include "CwAPI3D.h"
+
 import MyModule;
 
 
@@ -31,8 +33,16 @@ T divide(T a, T b)
   return a / b;
 }
 
-int main()
+CWAPI3D_PLUGIN bool plugin_x64_init(CwAPI3D::ControllerFactory* aFactory);
+
+
+bool plugin_x64_init(CwAPI3D::ControllerFactory* aFactory)
 {
+  if (!aFactory)
+  {
+    return EXIT_FAILURE;
+  }
+  aFactory->getUtilityController()->printToConsole(L"Hello World Plugin");
   std::cout << "Hello World!" << std::endl;
   [] { std::cout << "This is a Lambda =)\n"; }();
   std::cout << add(1, 2) << std::endl; // add is imported from MyModule (see above)

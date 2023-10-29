@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "C:/source/cadlib/v_30.0/3d/CwAPI3D"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE",
+                "CWPLUGIN_EXPORTS"
+            ],
+            "cStandard": "c17",
+            "intelliSenseMode": "windows-clang-x64",
+            "cppStandard": "c++23"
+        }
+    ],
+    "version": 4
+}
