@@ -20,9 +20,9 @@ link_directories(
 )
 
 add_library(${PROJECT_NAME} SHARED 
-        library.c++
         MyModule.ixx
         Strategy.cpp
+        library.c++
 )
 
 

@@ -5,6 +5,7 @@
 #include <concepts>
 #include <ranges>
 #include <algorithm>
+#include "pipe.hh"
 
 import MyModule;
 
@@ -47,40 +48,22 @@ namespace Strategy
   template<Invokable T>
   class Strategy
   {
-    public:
-     explicit Strategy(T&& aStrategy)
-       : mStrategy(std::forward<T>(aStrategy))
-     {
-     }
-      void execute()
-      {
-        mStrategy();
-      }
-    private:
-      T mStrategy;
+  public:
+    explicit Strategy(T&& aStrategy)
+      : mStrategy(std::forward<T>(aStrategy))
+    {
+    }
+    void execute()
+    {
+      mStrategy();
+    }
+  private:
+    T mStrategy;
   };
 }
 
 
-auto compare_with_tolerance = [=](auto x, auto y) {
-        // return x < y && 
-        return std::abs(x - y) < 1e-4;
-    };
 
-template<typename T>
-struct Proxy{T const& aValue;};
-
-template<typename Range, typename T>
-auto operator | (Range const& aRange, Proxy<T> const& aProxy)
-{
-  return aRange | std::views::filter([&](auto const& aElement) { return compare_with_tolerance(aElement, aProxy.aValue); });
-}
-
-template<typename T>
-auto filterTolerance(T const& aTolerance)
-{
-  return Proxy<T>{aTolerance};
-}
 
 CWAPI3D_PLUGIN bool plugin_x64_init(CwAPI3D::ControllerFactory* aFactory);
 
@@ -92,18 +75,22 @@ bool plugin_x64_init(CwAPI3D::ControllerFactory* aFactory)
     return EXIT_FAILURE;
   }
   aFactory->getUtilityController()->printToConsole(L"Hello World Plugin");
+
+  using consolePrinter = CwAPI3D::Interfaces::ICwAPI3DUtilityController&;
+  consolePrinter lCout = *(*aFactory).getUtilityController();
+
   std::cout << "Hello World!" << std::endl;
-  [] { std::cout << "This is a Lambda =)\n"; }();
-  std::cout << add(1, 2) << std::endl; // add is imported from MyModule (see above)
+  [&lCout] { lCout << L"This is a Lambda =)\n"; }();
+  lCout << std::to_wstring(add(1, 2)); // add is imported from MyModule (see above)
 
   auto lPerson = Person("John Doe");
   std::cout << lPerson.getName() << std::endl;
 
-  std::cout << divide<int>(10, 2) << std::endl;
+  lCout << std::to_wstring(divide<int>(10, 2));
 
   Strategy::Strategy lStrategy([] { std::cout << "This is a Lambda =)\n"; });
   lStrategy.execute();
-    std::function<void()> lambdaFunction = [] { std::cout << "This is a Lambda =)\n"; };
+  std::function<void()> lambdaFunction = [] { std::cout << "This is a Lambda =)\n"; };
   auto lStrategy2 = std::make_unique<Strategy::Strategy<decltype(lambdaFunction)>>(std::move(lambdaFunction));
   lStrategy2->execute();
 
